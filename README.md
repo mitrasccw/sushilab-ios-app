@@ -1,0 +1,1 @@
+This is a Cordova iOS project for the SushiLab app.
