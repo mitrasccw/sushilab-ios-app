@@ -1,19 +1,22 @@
 workflows:
-  ios_simulator_debug:
-    name: Cordova iOS Simulator Debug
+  ios_simulator_preview:
+    name: Cordova iOS Simulator Preview
     max_build_duration: 60
     instance_type: mac_mini_m2
+
     environment:
       xcode: latest
       cocoapods: default
       node: 20.11.1
       vars:
         CORDOVA_PROJECT_DIR: "."
+
     cache:
       cache_paths:
         - $HOME/.npm
         - $HOME/Library/Caches/CocoaPods
         - $CORDOVA_PROJECT_DIR/node_modules
+
     scripts:
       - name: Install npm dependencies
         script: |
@@ -28,19 +31,26 @@ workflows:
           cordova plugin add cordova-plugin-inappbrowser || true
           cordova prepare ios
 
-      - name: Show Cordova project state
+      - name: Verify generated Xcode project
         script: |
           cd "$CORDOVA_PROJECT_DIR"
-          cordova platform ls
-          cordova plugin ls
+          ls platforms/ios
+          ls platforms/ios/App.xcworkspace
+          ls platforms/ios/App.xcodeproj
 
-      - name: Build iOS simulator app
+      - name: Build simulator app with xcodebuild
         script: |
           cd "$CORDOVA_PROJECT_DIR"
-          cordova build ios --debug --emulator
+          xcodebuild build \
+            -workspace "platforms/ios/App.xcworkspace" \
+            -scheme "App" \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 15 Pro,OS=latest' \
+            -configuration Debug \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
 
     artifacts:
-      - $CORDOVA_PROJECT_DIR/platforms/ios/build/emulator/*.app
-      - $CORDOVA_PROJECT_DIR/platforms/ios/build/emulator/*.dSYM
-      - $CORDOVA_PROJECT_DIR/platforms/ios/build/**/*.app
-      - $CORDOVA_PROJECT_DIR/platforms/ios/build/**/*.dSYM
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
