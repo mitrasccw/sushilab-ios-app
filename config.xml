@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.sushilab.app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>SushiLab</name>
+    <description>
+        SushiLab - Hybrid Android App
+    </description>
+    <author email="dev@sushilab.ai" href="https://app.sushilab.ai">
+        SushiLab
+    </author>
+    <content src="index.html" />
+    <allow-navigation href="https://app2.sushilab.ai/*" />
+    <allow-navigation href="https://accounts.google.com/*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <access origin="*" />
+    <icon src="www/img/sushilab-logo.png" />
+    <preference name="StatusBarOverlaysWebView" value="false" />
+    <preference name="StatusBarBackgroundColor" value="#000000" />
+    <preference name="Orientation" value="portrait" />
+</widget>
