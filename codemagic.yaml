@@ -10,6 +10,11 @@ workflows:
       node: 20.11.1
       vars:
         CORDOVA_PROJECT_DIR: "."
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.sushilab.app
+      integrations:
+        app_store_connect: codemagic
 
     cache:
       cache_paths:
@@ -38,23 +43,79 @@ workflows:
           ls platforms/ios/App.xcworkspace
           ls platforms/ios/App.xcodeproj
 
-      - name: Build simulator app with xcodebuild
+      - name: Set up code signing
         script: |
           cd "$CORDOVA_PROJECT_DIR"
-          xcodebuild build \
-            -workspace "platforms/ios/App.xcworkspace" \
-            -scheme "App" \
-            -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
-            -configuration Debug \
-            -derivedDataPath build/DerivedData \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+          xcode-project use-profiles
+
+      - name: Build signed IPA
+        script: |
+          cd "$CORDOVA_PROJECT_DIR"
+          xcode-project build-ipa \
+            --workspace "platforms/ios/App.xcworkspace" \
+            --scheme "App"
 
     artifacts:
-      - $CORDOVA_PROJECT_DIR/build/DerivedData/Build/Products/Debug-iphonesimulator/*.app
-      - $CORDOVA_PROJECT_DIR/build/DerivedData/Build/Products/Debug-iphonesimulator/*.dSYM
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/Archives/**/*.xcarchive
+
+  ios_app_store_ipa:
+    name: Cordova iOS App Store IPA
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    integrations:
+      app_store_connect: codemagic
+
+    environment:
+      xcode: latest
+      cocoapods: default
+      node: 20.11.1
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.sushilab.app
+      vars:
+        CORDOVA_PROJECT_DIR: "."
+        XCODE_WORKSPACE: "platforms/ios/App.xcworkspace"
+        XCODE_SCHEME: "App"
+
+    cache:
+      cache_paths:
+        - $HOME/.npm
+        - $HOME/Library/Caches/CocoaPods
+        - $CORDOVA_PROJECT_DIR/node_modules
+
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          cd "$CORDOVA_PROJECT_DIR"
+          npm ci || npm install
+
+      - name: Recreate iOS platform cleanly
+        script: |
+          cd "$CORDOVA_PROJECT_DIR"
+          cordova platform rm ios || true
+          cordova platform add ios
+          cordova plugin add cordova-plugin-inappbrowser || true
+          cordova prepare ios
+
+      - name: Set up code signing
+        script: |
+          cd "$CORDOVA_PROJECT_DIR"
+          xcode-project use-profiles
+
+      - name: Build signed IPA
+        script: |
+          cd "$CORDOVA_PROJECT_DIR"
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/Archives/**/*.xcarchive
 
   ios_release:
     name: Cordova iOS Release (IPA)
