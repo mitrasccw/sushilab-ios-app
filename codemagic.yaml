@@ -77,7 +77,7 @@ workflows:
         - $HOME/Library/Caches/CocoaPods
         - $CORDOVA_PROJECT_DIR/node_modules
 
-    scripts:
+      scripts:
       - name: Install npm dependencies
         script: |
           cd "$CORDOVA_PROJECT_DIR"
@@ -94,7 +94,11 @@ workflows:
       - name: Install CocoaPods dependencies
         script: |
           cd "$CORDOVA_PROJECT_DIR/platforms/ios"
-          pod install
+          if [ -f Podfile ]; then
+            pod install
+          else
+            echo "No Podfile found, skipping pod install"
+          fi
 
       - name: Apply provisioning profiles to Xcode project
         script: |
