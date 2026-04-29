@@ -65,9 +65,9 @@ workflows:
       xcode: latest
       cocoapods: default
       node: 20.11.1
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.sushilab.app
+      #ios_signing:
+      #  distribution_type: app_store
+      #  bundle_identifier: com.sushilab.app
       vars:
         CORDOVA_PROJECT_DIR: "."
 
